@@ -1,0 +1,12 @@
+Aggregating with Time
+*********************
+
+This query counts the number of events that occurred in each hour and sorts the results by StartTime.
+
+StormEvents
+| summarize Count = count() by bin(StartTime, 1h)
+| order by StartTime asc
+
+This query counts the number of events that occurred in each hour and sorts the results by 
+
+--------------------------------------------------------------------------------------------------

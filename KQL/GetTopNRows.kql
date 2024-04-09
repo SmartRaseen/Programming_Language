@@ -1,0 +1,23 @@
+Get the top n rows
+******************
+
+The top operator returns the first n rows sorted by the specified column.
+
+Query:
+
+StormEvents
+| where State == 'TEXAS' and EventType == 'Flood'
+| top 5 by DamageProperty
+| project StartTime, EndTime, State, EventType, DamageProperty
+
+
+Example: Output
+
+StartTime				EndTime					State	EventType	DamageProperty
+2007-08-18T21:30:00Z	2007-08-19T23:00:00Z	TEXAS	Flood		5000000
+2007-06-27T00:00:00Z	2007-06-27T12:00:00Z	TEXAS	Flood		1200000
+2007-06-28T18:00:00Z	2007-06-28T23:00:00Z	TEXAS	Flood		1000000
+2007-06-27T00:00:00Z	2007-06-27T08:00:00Z	TEXAS	Flood		750000
+2007-06-26T20:00:00Z	2007-06-26T23:00:00Z	TEXAS	Flood		750000
+
+--------------------------------------------------------------------------------------------------

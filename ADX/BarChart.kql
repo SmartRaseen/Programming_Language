@@ -1,0 +1,25 @@
+Visualize query results
+***********************
+
+Visualizing query results in a chart or graph can help you identify patterns, trends, 
+and outliers in your data. You can do this with the render operator.
+
+Query:
+
+StormEvents
+| summarize TotalStorms = count() by State
+| render barchart
+
+
+Output - Table View
+*******************
+
+State			TotalStorms
+TEXAS			4701
+KANSAS			3166
+IOWA			2337
+ILLINOIS		2022
+MISSOURI		2016
+GEORGIA			1983
+MINNESOTA		1881
+WISCONSIN		1850

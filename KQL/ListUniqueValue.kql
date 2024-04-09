@@ -1,0 +1,27 @@
+List unique values
+******************
+
+It appears that there are multiple types of storms based on the results of the previous query. 
+Use the distinct operator to list all of the unique storm types.
+
+Query:
+
+StormEvents 
+| distinct EventType
+
+
+Example: Output
+
+EventType
+Thunderstorm Wind
+Hail
+Flash Flood
+Drought
+Winter Weather
+Winter Storm
+Heavy Snow
+High Wind
+Frost/Freeze
+Flood
+
+--------------------------------------------------------------------------------------------------

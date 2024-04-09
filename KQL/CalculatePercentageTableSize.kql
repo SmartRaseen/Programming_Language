@@ -1,0 +1,30 @@
+Calculate percentage based on table size
+****************************************
+
+To compare the number of storms by event type to the total number of storms in the database, 
+first save the total number of storms in the database as a variable. 
+
+Let statements are used to define variables within a query.
+
+Since tabular expression statements return tabular results, use the toscalar() function to convert 
+the tabular result of the count() function to a scalar value. 
+Then, the numeric value can be used in the percentage calculation.
+
+Query:
+
+let TotalStorms = toscalar(StormEvents | summarize count());
+StormEvents
+| summarize EventCount = count() by EventType
+| project EventType, EventCount, Percentage = todouble(EventCount) / TotalStorms * 100.0
+
+
+Example: Output
+
+EventType			EventCount		Percentage
+Thunderstorm Wind	13015			22.034673077574237
+Hail				12711			21.519994582331627
+Flash Flood			3688			6.2438627975485055
+Drought				3616			6.1219652592015716
+Winter Weather		3349			5.669928554498358
+
+--------------------------------------------------------------------------------------------------

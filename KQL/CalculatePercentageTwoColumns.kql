@@ -1,0 +1,41 @@
+Calculate percentages
+*********************
+
+Calculating percentages can help you understand the distribution and proportion of different values within your data. 
+This section covers two common methods for calculating percentages with the Kusto Query Language (KQL).
+
+Calculate percentage based on two columns
+
+Use count() and countif to find the percentage of storm events that caused crop damage in each state. 
+First, count the total number of storms in each state. 
+Then, count the number of storms that caused crop damage in each state.
+
+Then, use extend to calculate the percentage between the two columns by dividing the number of storms 
+with crop damage by the total number of storms and multiplying by 100.
+
+To ensure that you get a decimal result, use the todouble() function to convert at least 
+one of the integer count values to a double before performing the division.
+
+
+Query:
+
+StormEvents
+| summarize 
+    TotalStormsInState = count(),
+    StormsWithCropDamage = countif(DamageCrops > 0)
+    by State
+| extend PercentWithCropDamage = 
+    round((todouble(StormsWithCropDamage) / TotalStormsInState * 100), 2)
+| sort by StormsWithCropDamage
+
+
+Example Output
+
+State			TotalStormsInState	StormsWithCropDamage	PercentWithCropDamage
+IOWA			2337				359						15.36
+NEBRASKA		1766				201						11.38
+MISSISSIPPI		1218				105						8.62
+NORTH CAROLINA	1721				82						4.76
+MISSOURI		2016				78						3.87
+
+--------------------------------------------------------------------------------------------------

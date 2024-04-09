@@ -1,0 +1,28 @@
+Calculate the min, max, avg, and sum
+************************************
+
+To learn more about types of storms that cause crop damage, calculate the min(), max(), and avg() 
+crop damage for each event type, and then sort the result by the average damage
+
+Query:
+
+StormEvents
+| where DamageCrops > 0
+| summarize
+    MaxCropDamage=max(DamageCrops), 
+    MinCropDamage=min(DamageCrops), 
+    AvgCropDamage=avg(DamageCrops)
+    by EventType
+| sort by AvgCropDamage
+
+
+Example: Output
+
+EventType			MaxCropDamage	MinCropDamage	AvgCropDamage
+Frost/Freeze		568600000		3000			9106087.5954198465
+Wildfire			21000000		10000			7268333.333333333
+Drought				700000000		2000			6763977.8761061952
+Flood				500000000		1000			4844925.23364486
+Thunderstorm Wind	22000000		100				920328.36538461538
+
+--------------------------------------------------------------------------------------------------

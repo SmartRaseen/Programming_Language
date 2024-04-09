@@ -1,0 +1,54 @@
+Create calculated columns
+*************************
+
+The "project" and "extend" operators can both create calculated columns.
+
+project
+*******
+
+Use project to specify only the columns you want to view.
+
+Query:
+
+StormEvents
+| where State == 'TEXAS' and EventType == 'Flood'
+| top 5 by DamageProperty desc
+| project StartTime, EndTime, Duration = EndTime - StartTime, DamageProperty
+
+
+Example: Output
+
+StartTime				EndTime					Duration	DamageProperty
+2007-08-18T21:30:00Z	2007-08-19T23:00:00Z	1.01:30:00	5000000
+2007-06-27T00:00:00Z	2007-06-27T12:00:00Z	12:00:00	1200000
+2007-06-28T18:00:00Z	2007-06-28T23:00:00Z	05:00:00	1000000
+2007-06-27T00:00:00Z	2007-06-27T08:00:00Z	08:00:00	750000
+2007-06-26T20:00:00Z	2007-06-26T23:00:00Z	03:00:00	750000
+
+extend
+******
+
+Use extend to append the calculated column to the end of the table.
+
+Use extend to view the calculated Duration column along with all of the other columns. 
+The Duration column is added as the last column.
+
+Query:
+
+StormEvents
+| where State == 'TEXAS' and EventType == 'Flood'
+| top 5 by DamageProperty desc
+| extend Duration = EndTime - StartTime
+
+
+Example: Output
+
+StartTime				EndTime					...	Duration
+2007-08-18T21:30:00Z	2007-08-19T23:00:00Z	...	1.01:30:00
+2007-06-27T00:00:00Z	2007-06-27T12:00:00Z	...	12:00:00
+2007-06-28T18:00:00Z	2007-06-28T23:00:00Z	...	05:00:00
+2007-06-27T00:00:00Z	2007-06-27T08:00:00Z	...	08:00:00
+2007-06-26T20:00:00Z	2007-06-26T23:00:00Z	...	03:00:00
+
+
+--------------------------------------------------------------------------------------------------

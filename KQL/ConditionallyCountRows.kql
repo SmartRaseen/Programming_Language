@@ -1,0 +1,22 @@
+Conditionally count rows
+************************
+
+When analyzing your data, use countif() to count rows based on a specific condition to understand
+how many rows meet the given criteria.
+
+Query:
+
+StormEvents
+| summarize StormsWithCropDamage = countif(DamageCrops > 0) by State
+| top 5 by StormsWithCropDamage
+
+Example: Output
+
+State			StormsWithCropDamage
+IOWA			359
+NEBRASKA		201
+MISSISSIPPI		105
+NORTH CAROLINA	82
+MISSOURI		78
+
+--------------------------------------------------------------------------------------------------

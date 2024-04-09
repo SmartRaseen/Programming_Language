@@ -1,0 +1,36 @@
+Bucket data by condition
+************************
+
+The case() function groups data into buckets based on specified conditions. 
+
+The function returns the corresponding result expression for the first satisfied predicate, 
+or the final else expression if none of the predicates are satisfied.
+
+
+Query:
+
+StormEvents
+| summarize InjuriesCount = sum(InjuriesDirect) by State
+| extend InjuriesBucket = case (
+                              InjuriesCount > 50,
+                              "Large",
+                              InjuriesCount > 10,
+                              "Medium",
+                              InjuriesCount > 0,
+                              "Small",
+                              "No injuries"
+                          )
+| sort by State asc
+
+
+Example: Output
+
+State				InjuriesCount	InjuriesBucket
+ALABAMA				494				Large
+ALASKA				0				No injuries
+AMERICAN SAMOA		0				No injuries
+ARIZONA				6				Small
+ARKANSAS			54				Large
+ATLANTIC NORTH		15				Medium
+
+--------------------------------------------------------------------------------------------------

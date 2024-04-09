@@ -1,0 +1,18 @@
+Filtering Records
+*****************
+
+This query filters the StormEvents table to show only records where the EventType is "Tornado", 
+then selects the first 10 records.
+
+Query:
+
+StormEvents
+| where EventType == "Tornado"
+| take 10
+
+Example: Output
+
+StartTime				EndTime					EpisodeId	EventId		State			EventType	...
+2007-09-20T21:57:00Z	2007-09-20T22:05:00Z	11078		60913		FLORIDA			Tornado
+
+--------------------------------------------------------------------------------------------------

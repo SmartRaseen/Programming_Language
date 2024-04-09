@@ -1,0 +1,23 @@
+Select a subset of columns
+**************************
+
+Use the project operator to simplify the view and select a specific subset of columns. 
+Using project is often more efficient and easier to read than viewing all columns.
+
+Query:
+
+StormEvents
+| take 5
+| project State, EventType, DamageProperty
+
+
+Example: Output
+
+State		EventType			DamageProperty
+ATLANTIC 	SOUTH Waterspout	0
+FLORIDA		Heavy Rain			0
+FLORIDA		Tornado				6200000
+GEORGIA		Thunderstorm Wind	2000
+MISSISSIPPI	Thunderstorm Wind	20000
+
+--------------------------------------------------------------------------------------------------

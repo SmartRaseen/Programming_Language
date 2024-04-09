@@ -1,0 +1,25 @@
+
+Join the tables
+***************
+
+Join the PopulationData table with StormEvents on the common State column 
+to find the total property damage caused by storms per capita by state.
+
+Query:
+
+StormEvents
+| summarize PropertyDamage = sum(DamageProperty) by State
+| join kind=innerunique PopulationData on State
+| project State, PropertyDamagePerCapita = PropertyDamage / Population
+| sort by PropertyDamagePerCapita
+
+Example: Output
+
+State 			PropertyDamagePerCapita
+KANSAS			236
+OKLAHOMA		230
+NORTH DAKOTA	142
+MISSOURI		66
+ALABAMA			60
+MAINE			56
+

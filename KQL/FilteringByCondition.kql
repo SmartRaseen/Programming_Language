@@ -1,0 +1,24 @@
+Filter by condition
+*******************
+
+The where operator filters rows of data based on certain criteria.
+
+The following query looks for storm events in a specific State of a specific EventType.
+
+Query:
+
+StormEvents
+| where State == 'TEXAS' and EventType == 'Flood'
+| project StartTime, EndTime, State, EventType, DamageProperty
+
+
+Example:
+
+StartTime				EndTime					State	EventType	DamageProperty
+2007-01-13T08:45:00Z	2007-01-13T10:30:00Z	TEXAS	Flood			0
+2007-01-13T09:30:00Z	2007-01-13T21:00:00Z	TEXAS	Flood			0
+2007-01-13T09:30:00Z	2007-01-13T21:00:00Z	TEXAS	Flood			0
+2007-01-15T22:00:00Z	2007-01-16T22:00:00Z	TEXAS	Flood			20000
+2007-03-12T02:30:00Z	2007-03-12T06:45:00Z	TEXAS	Flood			0
+
+--------------------------------------------------------------------------------------------------

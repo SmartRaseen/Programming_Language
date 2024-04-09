@@ -1,0 +1,26 @@
+Map values from one set to another
+**********************************
+
+Static mapping is a useful technique for changing the presentation of your results. 
+In KQL, one way to perform static mapping is by using a dynamic dictionary and accessors to map values from one set to another.
+
+Query:
+
+let sourceMapping = dynamic(
+{
+"Emergency Manager": "Public",
+"Utility Company": "Private"
+});
+StormEvents
+| where Source == "Emergency Manager" or Source == "Utility Company"
+| project EventId, Source, FriendlyName = sourceMapping[Source]
+
+
+Example: Output
+
+EventId		Source				FriendlyName
+68796		Emergency Manager	Public
+...			...					...
+72609		Utility Company		Private
+
+--------------------------------------------------------------------------------------------------

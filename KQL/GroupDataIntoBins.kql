@@ -1,0 +1,29 @@
+Group data into bins
+********************
+
+To aggregate by numeric or time values, you'll first want to group the data into bins using the bin() function. 
+Using bin() can help you understand how values are distributed within a certain range and 
+make comparisons between different periods.
+
+The following query counts the number of storms that caused crop damage for each week in 2007. 
+The 7d argument represents a week, as the function requires a valid timespan value.
+
+
+Query:
+
+StormEvents
+| where StartTime between (datetime(2007-01-01) .. datetime(2007-12-31)) 
+    and DamageCrops > 0
+| summarize EventCount = count() by bin(StartTime, 7d)
+
+
+Example: Output
+
+StartTime	EventCount
+2007-01-01T00:00:00Z	16
+2007-01-08T00:00:00Z	20
+2007-01-29T00:00:00Z	8
+2007-02-05T00:00:00Z	1
+2007-02-12T00:00:00Z	3
+
+--------------------------------------------------------------------------------------------------
