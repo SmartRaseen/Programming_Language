@@ -1,0 +1,18 @@
+
+AreaChart - Visualization Query
+********************************
+
+The area chart visual shows a time-series relationship. 
+The first column of the query should be numeric and is used as the x-axis. 
+
+Other numeric columns are the y-axes. Unlike line charts, area charts also visually represent volume. 
+
+
+Query:
+
+StormEvents
+| where DeathsDirect > 0 or DeathsIndirect > 0
+| summarize StormTypeWithDeath = make_set(EventType), StartTime = min(StartTime) by State, format_datetime(StartTime, 'yyyy-MM-dd')
+| extend StormTypeDeathCount = array_length(StormTypeWithDeath)
+| order by StartTime asc
+| project StartTime = todatetime(StartTime), State, StormTypeDeathCount
