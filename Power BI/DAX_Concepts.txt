@@ -1,0 +1,63 @@
+
+Power BI - DAX
+**************
+
+What is DAX?
+
+Data Analysis Expressions
+
+Expressions Lnaguage for Power BI, Power Pivot and SSAS Tabular.
+
+
+Why DAX?
+
+Designed to support large user base
+Simpler than traditional technical language to learn
+Leverage existing knowledge of excel formulas
+less of learning curve for analyst.
+
+
+Calculated Columns:
+
+Create New columns on a table
+
+Method for Connecting Disparate Data Sources with Multiple Key column.
+
+
+Calculated Measures
+
+Create Dynamic Aggregations
+Ratios/ Percentages
+Time Intelligence Calculations
+Complex Relationship
+
+
+Calculated Tables
+
+Create new table derived from another table.
+Can be used to create a date table when one doesn't exist already.
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+Navigation Functions
+
+RELATED:
+
+Return a value from a connected table.
+
+RELATEDTABLE:
+
+Return a table from a connected table.
+
+Requirements
+
+Relationship must exist for these to work.
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+Create Calculated Column:
+*************************
+
+* Select table view from left side.
+
