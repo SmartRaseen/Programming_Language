@@ -1,0 +1,118 @@
+﻿// Copyright (C) Microsoft Corporation. All rights reserved.
+// Script GUID:f4bd0389-97f4-45da-b9e4-e81b87f48d57
+// Used for tracking history
+
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Interfaces.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Rpc.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/protobuf-net.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Skype.Data.Common.IO.Ray.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Extractor.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Schemas.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Newtonsoft.Json.dll";
+
+// REFERENCE ASSEMBLY [MyNamespace.MyCSharpClass];
+
+#DECLARE userName string = "v-smaricar";
+//#DECLARE inputPath string = "/local/users/"+ @userName +"/GeneratedOutput/EdgeShopping/spbadsresponseevent/07-2023/21-31/spbadsresponseevent_2023_07_21_0.parquet";
+//#DECLARE outputPath1 string = "/local/users/"+ @userName +"/GeneratedOutput/EdgeShopping/spbadsresponseevent/07-2023/SplitData_21-31/spbadsresponseevent_2023_07_21_0_0.parquet";
+
+USING Microsoft.Applications.Telemetry.Extractor;
+
+//#IF (@userName.StartsWith("@@") OR String.IsNullOrEmpty(@userName))
+//#ERROR "userName default value found: please set user name manually or via Set Parameters in Visual Studio";
+//#ENDIF
+
+//@searchlog =
+//    EXTRACT EventInfo_Time : DateTime,
+//            PipelineInfo_AccountId : string, 
+//            HostName : string, 
+//            ServiceId : string, 
+//            Environment : string, 
+//            Zone : string, 
+//            ServiceVersion : string, 
+//            ClusterId : string, 
+//            Boundary : string, 
+//            Cloud : string, 
+//            Orchestrator : string, 
+//            TrafficType : string, 
+//            Response : string, 
+//            Domain : string, 
+//            QueryType : string, 
+//            Category : string, 
+//            LogLevel : string, 
+//            EventId : string, 
+//            TraceId : string, 
+//            RequestId : string, 
+//            CallId : string, 
+//            CorrelationId : string, 
+//            DeviceInfo_OsVersion : string, 
+//            DeviceInfo_OsName : string, 
+//            PipelineInfo_IngestionTime : string, 
+//            PipelineInfo_ClientIp : string, 
+//            PipelineInfo_ClientCountry : string, 
+//            UserInfo_Language : string, 
+//            DeviceInfo_NetworkType : string, 
+//            DeviceInfo_NetworkCost : string, 
+//            DeviceInfo_NetworkProvider : string, 
+//            AppInfo_Language : string, 
+//            ProductAdsCount : string, 
+//            Query : string, 
+//            CategoryId : string, 
+//            isTestData : string, 
+//            ProductAdsExists : string, 
+//            OffersCount : string, 
+//            Muid : string, 
+//            Rguid : string, 
+//            PageUrl : string, 
+//            ImpressionId : string, 
+//            SpbRawResponse : string, 
+//            CategoryName : string, 
+//            AdsCount : string, 
+//            AdsCashbackCount : string, 
+//            OfferIds : string, 
+//            CampaignIds : string, 
+//            OfferTitles : string, 
+//            BuildVersion : string, 
+//            JSVersion : string, 
+//            ClientSessionId : string, 
+//            UserClientIP : string
+//    // FROM "/local/users/"+ @userName +"/GeneratedOutput/EdgeShopping/spbadsresponseevent/07-2023/21-31/spbadsresponseevent_2023_07_22_0.parquet"
+//    FROM "/Input/SPBAdsResponseEvent/spbadsresponseevent_2023_07_21_00.log_bucket0"
+//    USING Extractors.Parquet();
+
+@searchlog =
+    EXTRACT *
+    FROM "/Input/SPBAdsResponseEvent/EdgeShopping/Jul 30/spbadsresponseevent_2023_07_30.log_bucket0"
+    USING AriaExtractor("PipelineInfo_AccountId", "HostName", "ServiceId", "Environment", "Zone", "ServiceVersion", "ClusterId", "Boundary", "Cloud", "Orchestrator", "TrafficType", "Response", "Domain", "QueryType", "Category", "LogLevel", "EventId", "TraceId", "RequestId", "CallId", "CorrelationId", "DeviceInfo_OsVersion", "DeviceInfo_OsName", "PipelineInfo_IngestionTime", "PipelineInfo_ClientIp", "PipelineInfo_ClientCountry", "UserInfo_Language", "DeviceInfo_NetworkType", "DeviceInfo_NetworkCost", "DeviceInfo_NetworkProvider", "AppInfo_Language", "ProductAdsCount", "Query", "CategoryId", "isTestData", "ProductAdsExists", "OffersCount", "Muid", "Rguid", "PageUrl", "ImpressionId", "SpbRawResponse", "CategoryName", "AdsCount", "AdsCashbackCount", "OfferIds", "CampaignIds", "OfferTitles", "BuildVersion", "JSVersion", "ClientSessionId", "UserClientIP");
+
+
+///-------------------------------------------------------------
+
+@numberedData =
+    SELECT *,
+           ROW_NUMBER() OVER () AS RowNum
+    FROM @searchlog;
+
+@splitData =
+    SELECT *,
+        Convert.ToInt32( (RowNum - 1) / ((COUNT(*) OVER ()) / 4) + 1)  AS ChunkIndex
+    FROM @numberedData;
+
+@outputData =
+    SELECT * 
+    FROM @splitData;
+
+SET @@MaxFilesPerOutputFileSetVertex = 250;
+
+OUTPUT @outputData
+// TO "/local/users/"+ @userName +"/SampleInputs/EdgeShopping_Sample/Output/spbadsresponseevent_2023_07_21_1_{ChunkIndex}.parquet"
+TO "/Input/SPBAdsResponseEvent/SplitData/spbadsresponseevent_2023_07_30_0_{ChunkIndex}.parquet"
+USING Outputters.Parquet();
+
+///-------------------------------------------------------------
+
+// Working code: For extracting into parquet/text.
+//OUTPUT @searchlog
+//TO "/Input/SPBAdsResponseEvent/parquet/spbadsresponseevent_2023_07_22_3.parquet"
+//USING Outputters.Parquet();

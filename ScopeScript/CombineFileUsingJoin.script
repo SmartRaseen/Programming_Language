@@ -1,0 +1,61 @@
+﻿// Copyright (C) Microsoft Corporation. All rights reserved.
+// Script GUID:0805d1fb-aa53-456e-90a6-1dc91bba2fe2
+// Used for tracking history
+
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Interfaces.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Rpc.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/protobuf-net.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Skype.Data.Common.IO.Ray.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Extractor.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Schemas.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Newtonsoft.Json.dll";
+
+#DECLARE userName string = "v-smaricar";
+
+USING Microsoft.Applications.Telemetry.Extractor;
+USING Microsoft.Analytics.Samples.Formats.Json;
+
+// #DECLARE INPUT_PATH = string.Format("/shares/ugc-prod/AriaLogs/EdgeShopping/prd/cartextractionevent/{0}/{1}/",@CURRENT_YEAR,@CURRENT_MONTH);
+// #DECLARE SPBADSRESPONSEEVENT_INPUT_PATH = string.Format("/local/users/"+ @userName +"/GeneratedOutput/spbadsresponseevent/spbadsresponseevent_2023_07_26.parquet");
+
+#DECLARE SPBADSRESPONSEEVENT_INPUT_PATH = string.Format("/Input/SPBAdsResponseEvent/spbadsresponseevent_2023_07_21_00.log_bucket0");
+#DECLARE EDGEFLYOUTSTATUSEVENT_INPUT_PATH = string.Format("/Input/EdgeFlyoutStatusEvent/edgeflyoutstatusevent_2023_07_21_00.log_bucket0");
+#DECLARE ICREQUESTEVENT_INPUT_PATH = string.Format("/Input/ICRequestEvent/icrequestevent_2023_07_21_00.log_bucket0");
+
+spbadsresponseevent = EXTRACT * FROM @SPBADSRESPONSEEVENT_INPUT_PATH
+                      USING AriaExtractor(
+                      "EventInfo_BaseType","EventInfo_Source","PipelineInfo_AccountId","HostName","ServiceId","Environment","Zone","ServiceVersion","ClusterId","Boundary","Cloud","Orchestrator","TrafficType","Response","Domain","QueryType","AdsCount","Query","Muid","Rguid","PageUrl","SpbRawResponse","CategoryName","AdsCashbackCount","BuildVersion","JSVersion","Category","LogLevel","EventId","TraceId","RequestId","CallId","CorrelationId","DeviceInfo_OsVersion","DeviceInfo_OsName","PipelineInfo_IngestionTime","PipelineInfo_ClientIp","PipelineInfo_ClientCountry","UserInfo_Language","DeviceInfo_NetworkType","DeviceInfo_NetworkCost","DeviceInfo_NetworkProvider");
+
+//edgeflyoutstatusevent = EXTRACT * FROM @EDGEFLYOUTSTATUSEVENT_INPUT_PATH
+//                        USING AriaExtractor("EventInfo_Time","EdgeFlyoutStatus","PageType");
+//
+//icrequestevent = EXTRACT * FROM @ICREQUESTEVENT_INPUT_PATH
+//                 USING AriaExtractor("EventInfo_Time","QueryType","IsAADSignedIn","IsPersonalizationDataConsentEnabledV2");
+
+
+
+// Filter and process the data
+@processed =
+    SELECT EventInfo_Time,
+           EventInfo_Name,
+           Response,
+           QueryType,
+           EventInfo_Time.AddHours(-8) AS PacificTime, // Assuming UTC offset for 'US/Pacific' is -8 hours
+           JsonFunctions.JsonTuple(Response)["Value"] AS Value
+    FROM spbadsresponseevent
+    WHERE QueryType == "pdpsearch";
+              
+// Summarize the data
+@result =
+    SELECT DATEPART(day, PacificTime) AS Day,
+           COUNTIF(EventInfo_Name == "spbadsresponseevent") AS AdsRequests,
+           COUNTIF(!IsNull(Value)) AS TotalAdsResponse,
+           COUNTIF(!IsNull(Value) && CONTAINS(Value, "RebateValue")) AS TotalAdsResponseWithCashback
+    FROM @processed
+    GROUP BY Day;              
+              
+OUTPUT @result
+TO "/GeneratedOutput/spbadsresponseevent_2023_07_21_00.parquet"
+// TO "/local/users/"+ @userName +"/GeneratedOutput/EdgeShopping/spbadsresponseevent/07-2023/spbadsresponseevent_2023_07_21.txt"
+USING Outputters.Parquet();

@@ -1,0 +1,44 @@
+﻿// Copyright (C) Microsoft Corporation. All rights reserved.
+// Script GUID:31b98fc6-f5b0-464b-8c21-ec6a2e48407f
+// Used for tracking history
+
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Interfaces.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Rpc.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/protobuf-net.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Skype.Data.Common.IO.Ray.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Extractor.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Schemas.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Newtonsoft.Json.dll";
+
+#DECLARE userName string = "v-smaricar";
+
+// shopping.prod
+//#DECLARE inputPath string = "/local/users/"+ @userName +"/Sample_Inputs/spbadsresponseevent_2023_07_21_0_7.parquet";
+//#DECLARE outputPath string = "/local/users/"+ @userName +"/Generated_Outputs/spbadsresponseevent_2023_07_21.txt";
+
+// commerce.cds.prod
+#DECLARE inputPath string = "/local/Retail/Catalog/users/"+ @userName +"/Sample_Inputs/spbadsresponseevent_2023_07_21_0_7.parquet";
+#DECLARE outputPath string = "/local/Retail/Catalog/users/"+ @userName +"/Generated_Outputs/spbadsresponseevent_2023_07_21.txt";
+
+// retail.catalog
+//#DECLARE inputPath string = "/local/users/"+ @userName +"/Sample_Inputs/spbadsresponseevent_2023_07_21_0_7.parquet";
+//#DECLARE outputPath string = "/local/users/"+ @userName +"/Sample_Inputs/spbadsresponseevent_2023_07_21.txt";
+
+//#DECLARE outputPath string = "www.cosmos08.osdinfra.net/cosmos/sandbox/local/users/v-smaricar/EdgeShopping/spbadsresponseevent/LatestExtracted/spbadsresponseevent_2023_08_01_{ChunkIndex}.parquet";
+
+
+USING Microsoft.Applications.Telemetry.Extractor;
+
+//#IF (@userName.StartsWith("@@") OR String.IsNullOrEmpty(@userName))
+//#ERROR "userName default value found: please set user name manually or via Set Parameters in Visual Studio";
+//#ENDIF
+
+@searchlog =
+    EXTRACT *
+    FROM @inputPath
+    USING AriaExtractor("EventInfo_BaseType","EventInfo_Source","PipelineInfo_AccountId", "HostName", "ServiceId", "Environment", "Zone", "ServiceVersion", "ClusterId", "Boundary", "Cloud", "Orchestrator", "TrafficType", "Response", "Domain", "QueryType", "AdsCount","Query","CategoryId","Muid","Rguid","PageUrl","SpbRawResponse","CategoryName","AdsCashbackCount","BuildVersion","JSVersion","Category","LogLevel","EventId","TraceId","RequestId","CallId","CorrelationId","DeviceInfo_OsVersion","DeviceInfo_OsName","EventInfo_SDKVersion","PipelineInfo_IngestionTime","PipelineInfo_ClientIp","PipelineInfo_ClientCountry","UserInfo_Language","DeviceInfo_NetworkType","DeviceInfo_NetworkCost","DeviceInfo_NetworkProvider","AppInfo_Language");
+
+OUTPUT @searchlog
+TO @outputPath
+USING Outputters.Text();

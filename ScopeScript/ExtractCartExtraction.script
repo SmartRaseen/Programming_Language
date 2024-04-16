@@ -1,0 +1,53 @@
+﻿// Copyright (C) Microsoft Corporation. All rights reserved.
+// Script GUID:5627ab9f-265d-43a6-b862-eb876e222ed8
+// Used for tracking history
+
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Interfaces.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Rpc.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/protobuf-net.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Skype.Data.Common.IO.Ray.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Extractor.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Schemas.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Newtonsoft.Json.dll";
+
+// #DECLARE userName string = "v-smaricar";
+// #DECLARE inputPath = "/local/users/" +@userName+ "/CartExtractionEvent/cartextractionevent_2023_10_04.log_bucket0";
+
+//USING Microsoft.EdgeShopping;
+USING Microsoft.Applications.Telemetry.Extractor;
+
+#DECLARE RunDate DateTime = DateTime.Now.Date; // "2023-09-10" | @@RunDate@@
+#DECLARE YesterdayRunDate DateTime = @RunDate.AddDays( - 6);
+
+#DECLARE StartDate string = @YesterdayRunDate.ToString("yyyy-MM-dd").Replace("-", "_");
+//#DECLARE StartDate string = @RunDate.ToString("yyyy-MM-dd").Replace("-", "_");
+//#DECLARE EndDate string = @RunDate.ToString("yyyy-MM-dd").Replace("-", "_");
+
+// cartextractionevent: columns
+@searchlog =
+    EXTRACT *
+    FROM SPARSE STREAMSET "/local/users/v-smaricar/CartExtractionEvent/cartextractionevent_"+@StartDate+".log_bucket%n"
+    RANGE __serialnum = ["2", "3"]
+    USING AriaExtractor("EventInfo_BaseType", "EventInfo_Source", "PipelineInfo_AccountId", "HostName", "ServiceId", "Environment", "Zone", "ServiceVersion", "ClusterId", "Boundary", "Cloud", "Orchestrator", "TrafficType", "Muid", "MuidAge", "ComponentUpdaterVersion", "ImpressionId", "CartId", "Domain", "PageUrl", "Message", "AppInfo_ClientName", "JSVersion", "EventTime", "AFDMarket", "IsCorpNet", "CountryISO", "CountryConfidence", "BuildVersion", "Category", "LogLevel", "EventId", "TraceId", "RequestId", "CallId", "CorrelationId", "DeviceInfo_OsVersion", "DeviceInfo_OsName", "PipelineInfo_IngestionTime", "PipelineInfo_ClientIp", "PipelineInfo_ClientCountry", "UserInfo_Language", "DeviceInfo_NetworkType", "DeviceInfo_NetworkCost", "DeviceInfo_NetworkProvider", "AppInfo_Language", "AnaheimId", "KeyCount", "DistinctColumnLocationCount", "RangeColumnLocationCount", "ColumnNames", "SubcolumnNames", "ErrorCode", "ScriptRunNum", "ValidationMsgNum", "ValidationReason", "initializeTime", "preValidationTime", "Time", "Path", "PageStatus", "TaskName", "MsclickId", "RGuid", "Token", "OfferId", "IsBingSignedIn", "IsMSASignedIn", "IsSSOENabled", "IsAnidPresent", "UrlPath", "Count", "Response", "OSName", "OSVersion", "ExtractedPageLocale", "ExclusiveMarket", "market", "City", "AFDState", "ZipCode", "PersonalizationDataConsent", "ColumnName", "EdgeFlyoutStatus", "ComparableOffersCount", "SavingsAmount", "Metadata", "FlyoutId", "EnabledServiceFlights", "UUID", "CashbackCommission", "CashbackCommissionType", "OffersRetunedCount", "IsAdClick", "Anid", "ProductName", "Url", "Reviews", "ReviewsRating", "OperationType", "Key", "ResultStatus", "AbandonedProductTitle", "IsOnDemand", "PretriggerVersion", "Platform", "SelectedWithSmartQuery", "QueryString", "ProductAttributes", "PingUrlBase", "ImpressionFeedbackUrl", "CashbackOffer", "ErrorType", "IsClientError", "StackTrace", "Data", "AggregateRating", "AggregateRatingCount", "ProductSellerName", "Price", "ImageUrl", "ProductUPC", "ProductBrandName", "ProductAsin", "Currency", "Market", "CouponCode", "Scenario", "Description", "IsRebatesFlow", "IsRebatesUser", "TotalTime", "RenderStep", "CouponType", "Status", "PurchaseValue", "PageCurrency", "ExperimentInfo", "PdpEventId", "ProductNameFromAds", "ESF", "ProductPrice", "HtmlFragment", "OrderConfirmationPageUrl", "ProductNames", "ProductIdSku", "OrderSubTotalPrice", "OrderDiscountPrice", "OrderDiscountCode", "OrderShippingPrice", "OrderTaxesPrice", "TransactionId", "PurchaseTotal", "NumberOfItems", "PricePerItem", "QuantityPerItem", "ConfirmationPageEventId", "NavigatorWebdriver", "SeleniumUnwrapped", "WebdriverEvaluate", "DriverEvaluate", "IsChromeDriver", "WindowCallPhantom", "Window_Phantom", "WindowPhantom", "IsElectron", "CanPlayTypeTs", "DomainCountry", "RetailerDataDomain", "ActiveCashbackOffers", "PopupOrignation", "Reason", "PrefSize", "Result", "StartingPrice", "FinalPrice", "Discount", "CouponSource", "CashbackCategory", "CashbackValue", "DebugData", "Action", "ExceptionType", "Products", "CartValue");
+
+@numberedData =
+    SELECT *,
+           ROW_NUMBER() OVER () AS RowNum
+    FROM @searchlog;
+
+@splitData =
+    SELECT *,
+        Convert.ToInt32( (RowNum - 1) / ((COUNT(*) OVER ()) / 4) + 1)  AS ChunkIndex
+    FROM @numberedData;
+
+@outputData =
+    SELECT * 
+    FROM @splitData;
+
+SET @@MaxFilesPerOutputFileSetVertex = 250;
+
+// Output each part to separate CSV files
+OUTPUT @outputData
+TO "/local/users/v-smaricar/CartExtractionEvent/Output/cartextractionevent_"+@StartDate+"_2_{ChunkIndex}.csv"
+USING Outputters.Csv();

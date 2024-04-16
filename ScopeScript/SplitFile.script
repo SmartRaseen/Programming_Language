@@ -1,0 +1,109 @@
+﻿// Copyright (C) Microsoft Corporation. All rights reserved.
+// Script GUID:b2e725cf-3ac2-493d-a75e-7b9f45aaaf50
+// Used for tracking history
+
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Interfaces.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Rpc.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/protobuf-net.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Skype.Data.Common.IO.Ray.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Extractor.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Schemas.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Newtonsoft.Json.dll";
+
+#DECLARE userName string = "v-smaricar";
+ // #DECLARE inputPath = "/local/users/"+ @userName +"/SampleInputs/EdgeShopping/spbadsresponseevent/spbadsresponseevent_2023_08_01.parquet";
+ // #DECLARE inputPath string = "/local/users/"+ @userName +"/GeneratedOutput/EdgeShopping/spbadsresponseevent/07-2023/21-31/spbadsresponseevent_2023_07_30_3.parquet";
+
+USING Microsoft.Applications.Telemetry.Extractor;
+//@searchlog =
+//    EXTRACT *
+//    FROM "/local/users/"+ @userName +"/GeneratedOutput/EdgeShopping/spbadsresponseevent/07-2023/21-31/spbadsresponseevent_2023_07_21_0.parquet"
+//    USING AriaExtractor("PipelineInfo_AccountId", "HostName", "ServiceId", "Environment", "Zone", "ServiceVersion", "ClusterId", "Boundary", "Cloud", "Orchestrator", "TrafficType", "Response", "Domain", "QueryType", "Category", "LogLevel", "EventId", "TraceId", "RequestId", "CallId", "CorrelationId", "DeviceInfo_OsVersion", "DeviceInfo_OsName", "PipelineInfo_IngestionTime", "PipelineInfo_ClientIp", "PipelineInfo_ClientCountry", "UserInfo_Language", "DeviceInfo_NetworkType", "DeviceInfo_NetworkCost", "DeviceInfo_NetworkProvider", "AppInfo_Language", "ProductAdsCount", "Query", "CategoryId", "isTestData", "ProductAdsExists", "OffersCount", "Muid", "Rguid", "PageUrl", "ImpressionId", "SpbRawResponse", "CategoryName", "AdsCount", "AdsCashbackCount", "OfferIds", "CampaignIds", "OfferTitles", "BuildVersion", "JSVersion", "ClientSessionId", "UserClientIP");
+
+@searchlog =
+    EXTRACT 
+            EventInfo_Time : DateTime,
+            EventInfo_Name : string,
+            EventInfo_BaseType : string,
+            EventInfo_Source : string,
+            PipelineInfo_AccountId : string, 
+            HostName : string, 
+            ServiceId : string, 
+            Environment : string, 
+            Zone : string, 
+            ServiceVersion : string, 
+            ClusterId : string, 
+            Boundary : string, 
+            Cloud : string, 
+            Orchestrator : string, 
+            TrafficType : string, 
+            Response : string, 
+            Domain : string, 
+            QueryType : string, 
+            AdsCount : string,
+            Query : string,
+            CategoryId : string,
+            Muid : string,
+            Rguid : string,
+            PageUrl : string,
+            SpbRawResponse : string,
+            CategoryName : string,
+            AdsCashbackCount : string,
+            BuildVersion : string, 
+            JSVersion : string,
+            Category : string,
+            LogLevel : string,
+            EventId : string,
+            TraceId : string,
+            RequestId : string,
+            CallId : string,
+            CorrelationId : string,
+            DeviceInfo_OsVersion : string,
+            DeviceInfo_OsName : string,
+            EventInfo_SDKVersion : string,
+            PipelineInfo_IngestionTime : string,
+            PipelineInfo_ClientIp : string,
+            PipelineInfo_ClientCountry : string,
+            UserInfo_Language : string,
+            DeviceInfo_NetworkType : string,
+            DeviceInfo_NetworkCost : string,
+            DeviceInfo_NetworkProvider : string,
+            AppInfo_Language : string
+//    FROM "/local/users/"+ @userName +"/SampleInputs/EdgeShopping_Sample/spbadsresponseevent_2023_07_21_1.parquet"
+    FROM "/Input/SPBAdsResponseEvent/parquet/spbadsresponseevent_2023_07_25_1.parquet"
+    USING Extractors.Parquet();
+
+//@searchlog =
+//    EXTRACT *
+//    // FROM "/Input/SPBAdsResponseEvent/parquet/EdgeShopping/spbadsresponseevent_2023_07_21_00.parquet"
+//    FROM "/local/users/"+ @userName +"/SampleInputs/EdgeShopping_Sample/spbadsresponseevent_2023_07_21_00.parquet"
+//    USING AriaExtractor("EventInfo_BaseType","EventInfo_Source","PipelineInfo_AccountId", "HostName", "ServiceId", "Environment", "Zone", "ServiceVersion", "ClusterId", "Boundary", "Cloud", "Orchestrator", "TrafficType", "Response", "Domain", "QueryType", "AdsCount","Query","CategoryId","Muid","Rguid","PageUrl","SpbRawResponse","CategoryName","AdsCashbackCount","BuildVersion","JSVersion","Category","LogLevel","EventId","TraceId","RequestId","CallId","CorrelationId","DeviceInfo_OsVersion","DeviceInfo_OsName","EventInfo_SDKVersion","PipelineInfo_IngestionTime","PipelineInfo_ClientIp","PipelineInfo_ClientCountry","UserInfo_Language","DeviceInfo_NetworkType","DeviceInfo_NetworkCost","DeviceInfo_NetworkProvider","AppInfo_Language");
+
+//DECLARE @NumberOfPartitions int = 5; // Number of partitions
+
+@numberedData =
+    SELECT *,
+           ROW_NUMBER() OVER () AS RowNum
+    FROM @searchlog;
+
+@splitData =
+    SELECT *,
+        Convert.ToInt32( (RowNum - 1) / ((COUNT(*) OVER ()) / 4) + 1)  AS ChunkIndex
+    FROM @numberedData;
+
+@outputData =
+    SELECT * 
+    FROM @splitData;
+
+SET @@MaxFilesPerOutputFileSetVertex = 250;
+
+OUTPUT @outputData
+// TO "/local/users/"+ @userName +"/SampleInputs/EdgeShopping_Sample/Output/spbadsresponseevent_2023_07_21_1_{ChunkIndex}.parquet"
+TO "/Input/SPBAdsResponseEvent/SplitData/spbadsresponseevent_2023_07_25_1_{ChunkIndex}.parquet"
+USING Outputters.Parquet();
+
+//// Output each part to separate Parquet/Text files
+//OUTPUT @outputData
+//TO "/GeneratedOutput/SplitData/spbadsresponseevent_2023_07_26.txt"
+//USING Outputters.Text();

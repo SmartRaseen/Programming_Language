@@ -1,0 +1,75 @@
+﻿// Copyright (C) Microsoft Corporation. All rights reserved.
+// Script GUID:29a6dd32-f86d-43fc-954f-c6bd4a60744d
+// Used for tracking history
+
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Interfaces.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Rpc.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/protobuf-net.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Skype.Data.Common.IO.Ray.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Extractor.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Schemas.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Newtonsoft.Json.dll";
+
+@searchlog =
+    EXTRACT EventInfo_Time : DateTime,
+            PipelineInfo_AccountId : string, 
+            HostName : string, 
+            ServiceId : string, 
+            Environment : string, 
+            Zone : string, 
+            ServiceVersion : string, 
+            ClusterId : string, 
+            Boundary : string, 
+            Cloud : string, 
+            Orchestrator : string, 
+            TrafficType : string, 
+            Response : string, 
+            Domain : string, 
+            QueryType : string, 
+            AdsCount : string,
+            Query : string, 
+            CategoryId : string, 
+            Muid : string, 
+            Rguid : string, 
+            PageUrl : string, 
+            SpbRawResponse : string,
+            CategoryName : string, 
+            AdsCashbackCount : string,
+            BuildVersion : string, 
+            JSVersion : string, 
+            Category : string, 
+            LogLevel : string, 
+            EventId : string, 
+            TraceId : string, 
+            RequestId : string, 
+            CallId : string, 
+            CorrelationId : string, 
+            DeviceInfo_OsVersion : string, 
+            DeviceInfo_OsName : string,
+            EventInfo_SdkVersion : string,
+            PipelineInfo_IngestionTime : string, 
+            PipelineInfo_ClientIp : string, 
+            PipelineInfo_ClientCountry : string, 
+            UserInfo_Language : string, 
+            DeviceInfo_NetworkType : string, 
+            DeviceInfo_NetworkCost : string, 
+            DeviceInfo_NetworkProvider : string, 
+            AppInfo_Language : string 
+            
+            //ProductAdsCount : string, 
+//            isTestData : string, 
+//            ProductAdsExists : string, 
+//            OffersCount : string, 
+//            ImpressionId : string,   
+//            OfferIds : string, 
+//            CampaignIds : string, 
+//            OfferTitles : string, 
+//            ClientSessionId : string, 
+//            UserClientIP : string
+            FROM "/Input/SPBAdsResponseEvent/SplitData/spbadsresponseevent_2023_07_28_0_3.parquet"
+            USING Extractors.Parquet();
+
+OUTPUT @searchlog
+TO "/Input/SPBAdsResponseEvent/ExtractedSplitData/spbadsresponseevent_2023_07_28_0_3.parquet"
+USING Outputters.Parquet();

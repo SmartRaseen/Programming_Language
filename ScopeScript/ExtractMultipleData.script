@@ -1,0 +1,101 @@
+﻿// Copyright (C) Microsoft Corporation. All rights reserved.
+// Script GUID:24b2cf69-7689-44a5-8949-0ffa8cff737a
+// Used for tracking history
+
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Interfaces.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Microsoft.Bond.Rpc.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/protobuf-net.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Skype.Data.Common.IO.Ray.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Extractor.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/ASG.Telemetry.Schemas.dll";
+REFERENCE @"D:/Scope/Scope Script/dlls/Newtonsoft.Json.dll";
+
+// REFERENCE ASSEMBLY [MyNamespace.MyCSharpClass];
+
+#DECLARE userName string = "v-smaricar";
+#DECLARE START_SERIAL_NUM = "0";
+#DECLARE END_SERIAL_NUM = "1";
+#DECLARE START_DATE = "2023-07-28";
+#DECLARE END_DATE = "2023-07-30";
+
+// #DECLARE inputPath string = "Input/SPBAdsResponseEvent/SampleInputs/spbadsresponseevent_2023_07_28_0_.parquet";
+//#DECLARE outputPath1 string = "Input/SPBAdsResponseEvent/Outputs/spbadsresponseevent_2023_07_28_0_.parquet";
+
+USING Microsoft.Applications.Telemetry.Extractor;
+
+@searchlog =
+    EXTRACT 
+            EventInfo_Time : DateTime,
+            EventInfo_Name : string,
+            EventInfo_BaseType : string,
+            EventInfo_Source : string,
+            PipelineInfo_AccountId : string, 
+            HostName : string, 
+            ServiceId : string, 
+            Environment : string, 
+            Zone : string, 
+            ServiceVersion : string, 
+            ClusterId : string, 
+            Boundary : string, 
+            Cloud : string, 
+            Orchestrator : string, 
+            TrafficType : string, 
+            Response : string, 
+            Domain : string, 
+            QueryType : string, 
+            AdsCount : string,
+            Query : string,
+            CategoryId : string,
+            Muid : string,
+            Rguid : string,
+            PageUrl : string,
+            SpbRawResponse : string,
+            CategoryName : string,
+            AdsCashbackCount : string,
+            BuildVersion : string, 
+            JSVersion : string,
+            Category : string,
+            LogLevel : string,
+            EventId : string,
+            TraceId : string,
+            RequestId : string,
+            CallId : string,
+            CorrelationId : string,
+            DeviceInfo_OsVersion : string,
+            DeviceInfo_OsName : string,
+            EventInfo_SDKVersion : string,
+            PipelineInfo_IngestionTime : string,
+            PipelineInfo_ClientIp : string,
+            PipelineInfo_ClientCountry : string,
+            UserInfo_Language : string,
+            DeviceInfo_NetworkType : string,
+            DeviceInfo_NetworkCost : string,
+            DeviceInfo_NetworkProvider : string,
+            AppInfo_Language : string,
+            FilePath : string
+    FROM SPARSE STREAMSET "Input/SPBAdsResponseEvent/SampleInputs/*.parquet"
+    PATTERN "spbadsresponseevent_%Y_%m_%d_%n.parquet"
+    RANGE __date = [@START_DATE, @END_DATE], __serialnum = [@START_SERIAL_NUM, @END_SERIAL_NUM]
+    USING Extractors.Parquet();
+
+@numberedData =
+    SELECT *,
+           ROW_NUMBER() OVER () AS RowNum
+    FROM @searchlog;
+
+    @splitData =
+        SELECT *,
+            Convert.ToInt32( (RowNum - 1) / ((COUNT(*) OVER ()) / 4) + 1)  AS ChunkIndex
+        FROM @numberedData;
+    
+    @outputData =
+        SELECT * 
+        FROM @splitData;
+    
+    SET @@MaxFilesPerOutputFileSetVertex = 250;
+
+    
+OUTPUT @outputData
+TO "Input/SPBAdsResponseEvent/Outputs/spbadsresponseevent_{ChunkIndex}.parquet"
+USING Outputters.Parquet();
