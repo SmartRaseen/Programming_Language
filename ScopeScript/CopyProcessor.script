@@ -1,0 +1,26 @@
+searchlogRowset = SELECT Market, Results
+      FROM searchlog;
+
+searchlogCopy = PROCESS searchlogRowset
+      PRODUCE Market, Results
+      USING CopyProcessor;
+	  
+#CS
+public class CopyProcessor : Processor
+{
+    public override Schema Produces(string[] requested_columns, string[] args, Schema input_schema)
+    {
+        var output_schema = input_schema.CloneWithSource();
+        return output_schema;
+    }	
+
+    public override IEnumerable<Row> Process(RowSet input_rowset, Row output_row, string[] args)
+    {
+        foreach (Row input_row in input_rowset.Rows)
+        {
+            input_row.CopyTo(output_row);
+            yield return output_row;
+        }
+    }
+}
+#ENDCS

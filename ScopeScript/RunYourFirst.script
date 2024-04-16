@@ -1,0 +1,15 @@
+searchlog =
+    EXTRACT ImpressionId : int,
+	    UserId : int,
+            Start : DateTime,
+            Region : string,
+            Query : string,
+            Duration : int,
+            Urls : string,
+            ClickedUrls : string
+    FROM @"SearchLog.txt"
+    USING DefaultTextExtractor();
+
+OUTPUT searchlog
+   TO @"output.tsv"
+   USING DefaultTextOutputter();
